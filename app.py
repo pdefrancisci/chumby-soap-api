@@ -1,5 +1,6 @@
 """Funny Moments - Chumby image server (step 1: test image)."""
 import os
+from nhl import get_nhl_jpeg
 from flask import Flask, Response, abort, send_file
 
 app = Flask(__name__)
@@ -37,6 +38,7 @@ def ping():
 @app.route("/chumby/image/<name>.jpg")
 def chumby_image(name):
     path = IMAGES.get(name)
+    print(path)
     if not path or not os.path.exists(path):
         abort(404)
     resp = send_file(path, mimetype="image/jpeg", conditional=False)
@@ -44,6 +46,18 @@ def chumby_image(name):
     resp.headers["Cache-Control"] = "no-store, max-age=0"
     return resp
 
+@app.route("/chumby/nhl/<team>")
+def chumby_nhl(team):
+    try:
+        data = get_nhl_jpeg(team)
+    except ValueError:
+        abort(404)
+    except Exception:
+        app.logger.exception("nhl render failed")
+        abort(502)
+    resp = Response(data, mimetype="image/jpeg")
+    resp.headers["Cache-Control"] = "no-store, max-age=0"
+    return resp
 
 if __name__ == "__main__":
     # Dev only. In production use gunicorn behind nginx.
