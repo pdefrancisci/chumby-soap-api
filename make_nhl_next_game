@@ -42,30 +42,34 @@ def records():
         for t in data["standings"]
     }
 
+def paste_logo(img, team, isHome):
+    resp = requests.get(team["logo"])
+    resp.raise_for_status()
+    png_bytes = cairosvg.svg2png(bytestring=resp.content)
+    logo = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+    logo = logo.resize((logo_size,logo_size))
+    if isHome:
+        img.paste(logo,(home_spot, (H-logo.height)//2), logo)
+    else:
+        img.paste(logo,(away_spot, (H-logo.height)//2), logo)
+
 game = next_game(TEAM)
 recs = records()
 home, away = game["homeTeam"], game["awayTeam"]
 opp = away if home["abbrev"] == TEAM else home
 
-resp = requests.get(away["logo"])
-resp.raise_for_status()
-png_bytes = cairosvg.svg2png(bytestring=resp.content)
-logo = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
-logo = logo.resize((logo_size,logo_size))
-img.paste(logo,(home_spot, (H-logo.height)//2), logo)
+paste_logo(img, away, False)
 
-resp = requests.get(home["logo"])
-resp.raise_for_status()
-png_bytes = cairosvg.svg2png(bytestring=resp.content)
-logo = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
-logo = logo.resize((logo_size,logo_size))
-img.paste(logo,(away_spot, (H-logo.height)//2), logo)
+paste_logo(img, home, True)
 
 venue = game["venue"]["default"]
 away_record = recs.get(away["abbrev"])
-home_record = recs.get(TEAM)
+home_record = recs.get(home["abbrev"])
 
-# d.text((200, 200), venue, fill=(255, 255, 255))
+d.text((42, 9), venue, fill=(0, 0, 0))
+print(home)
+d.text((away_spot+(logo_size//2), 40), away["abbrev"], fill=(255, 255, 255))
+d.text((home_spot+(logo_size//2), 40), home["abbrev"], fill=(255, 255, 255))
 d.text((away_spot+(logo_size//2), 190), away_record, fill=(255, 255, 255))
 d.text((home_spot+(logo_size//2), 190), home_record, fill=(255, 255, 255))
 
