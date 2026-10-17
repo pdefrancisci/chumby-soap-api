@@ -1,6 +1,7 @@
 """Funny Moments - Chumby image server (step 1: test image)."""
 import os
 from nhl import get_nhl_jpeg
+from nws import get_nws_jpeg
 from flask import Flask, Response, abort, send_file
 
 app = Flask(__name__)
@@ -52,6 +53,17 @@ def chumby_nhl(team):
         data = get_nhl_jpeg(team)
     except ValueError:
         abort(404)
+    except Exception:
+        app.logger.exception("nhl render failed")
+        abort(502)
+    resp = Response(data, mimetype="image/jpeg")
+    resp.headers["Cache-Control"] = "no-store, max-age=0"
+    return resp
+
+@app.route("/chumby/radar/<station>")
+def chumby_radar(station):
+    try:
+        data = get_nws_jpeg(station)
     except Exception:
         app.logger.exception("nhl render failed")
         abort(502)
