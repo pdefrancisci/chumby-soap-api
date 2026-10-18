@@ -1,0 +1,5 @@
+rsync -avz --exclude venv --exclude __pycache__ ./ pjd@137.184.220.205:~/apps/chumby/
+
+ssh pjd@137.184.220.205
+sudo systemctl restart chumby
+sudo systemctl status chumby
